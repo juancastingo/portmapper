@@ -1,15 +1,27 @@
 use portmapper::model::{IpVersion, PortBinding, Protocol};
-use portmapper::snapshot::{create_snapshot, diff_snapshots, load_snapshot_file, save_snapshot_file};
+use portmapper::snapshot::{
+    create_snapshot, diff_snapshots, load_snapshot_file, save_snapshot_file,
+};
 use tempfile::tempdir;
 
-fn mock_binding(port: u16, proto: Protocol, interface: &str, pid: Option<u32>, proc: Option<&str>) -> PortBinding {
+fn mock_binding(
+    port: u16,
+    proto: Protocol,
+    interface: &str,
+    pid: Option<u32>,
+    proc: Option<&str>,
+) -> PortBinding {
     let is_all = interface == "0.0.0.0" || interface == "::";
     let is_local = interface == "127.0.0.1" || interface == "::1";
 
     PortBinding {
         port,
         protocol: proto,
-        ip_version: if interface.contains(':') { IpVersion::V6 } else { IpVersion::V4 },
+        ip_version: if interface.contains(':') {
+            IpVersion::V6
+        } else {
+            IpVersion::V4
+        },
         interface: interface.to_string(),
         is_all_interfaces: is_all,
         is_localhost: is_local,
@@ -22,9 +34,13 @@ fn mock_binding(port: u16, proto: Protocol, interface: &str, pid: Option<u32>, p
 
 #[test]
 fn test_diff_detects_newly_exposed_public_ports() {
-    let base_bindings = vec![
-        mock_binding(3000, Protocol::Tcp, "127.0.0.1", Some(1001), Some("node")),
-    ];
+    let base_bindings = vec![mock_binding(
+        3000,
+        Protocol::Tcp,
+        "127.0.0.1",
+        Some(1001),
+        Some("node"),
+    )];
     let base_snapshot = create_snapshot(base_bindings, Some("baseline".to_string()));
 
     let curr_bindings = vec![
@@ -50,14 +66,32 @@ fn test_diff_detects_newly_exposed_public_ports() {
 #[test]
 fn test_diff_detects_closed_ports_and_process_changes() {
     let base_bindings = vec![
-        mock_binding(8080, Protocol::Tcp, "127.0.0.1", Some(1234), Some("legacy-api")),
-        mock_binding(9090, Protocol::Tcp, "127.0.0.1", Some(5678), Some("prometheus")),
+        mock_binding(
+            8080,
+            Protocol::Tcp,
+            "127.0.0.1",
+            Some(1234),
+            Some("legacy-api"),
+        ),
+        mock_binding(
+            9090,
+            Protocol::Tcp,
+            "127.0.0.1",
+            Some(5678),
+            Some("prometheus"),
+        ),
     ];
     let base_snapshot = create_snapshot(base_bindings, Some("baseline".to_string()));
 
     let curr_bindings = vec![
         // 8080 process was migrated / restarted with new PID
-        mock_binding(8080, Protocol::Tcp, "127.0.0.1", Some(9999), Some("modern-api")),
+        mock_binding(
+            8080,
+            Protocol::Tcp,
+            "127.0.0.1",
+            Some(9999),
+            Some("modern-api"),
+        ),
         // 9090 was closed / terminated
     ];
     let curr_snapshot = create_snapshot(curr_bindings, Some("current".to_string()));
@@ -72,7 +106,10 @@ fn test_diff_detects_closed_ports_and_process_changes() {
     assert_eq!(diff.changed[0].port, 8080);
     assert_eq!(diff.changed[0].previous.pid, Some(1234));
     assert_eq!(diff.changed[0].current.pid, Some(9999));
-    assert_eq!(diff.changed[0].current.process_name.as_deref(), Some("modern-api"));
+    assert_eq!(
+        diff.changed[0].current.process_name.as_deref(),
+        Some("modern-api")
+    );
 }
 
 #[test]
@@ -82,7 +119,13 @@ fn test_snapshot_file_roundtrip() {
 
     let bindings = vec![
         mock_binding(22, Protocol::Tcp, "0.0.0.0", Some(1), Some("sshd")),
-        mock_binding(53, Protocol::Udp, "127.0.0.53", Some(400), Some("systemd-resolve")),
+        mock_binding(
+            53,
+            Protocol::Udp,
+            "127.0.0.53",
+            Some(400),
+            Some("systemd-resolve"),
+        ),
     ];
     let snapshot = create_snapshot(bindings, Some("test_run".to_string()));
 

@@ -51,7 +51,11 @@ pub fn scan_listening_ports() -> Vec<PortBinding> {
     );
 
     // Sort by port, then protocol
-    bindings.sort_by(|a, b| a.port.cmp(&b.port).then_with(|| a.protocol.to_string().cmp(&b.protocol.to_string())));
+    bindings.sort_by(|a, b| {
+        a.port
+            .cmp(&b.port)
+            .then_with(|| a.protocol.to_string().cmp(&b.protocol.to_string()))
+    });
     bindings
 }
 

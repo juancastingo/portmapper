@@ -1,6 +1,6 @@
-use std::path::PathBuf;
 use clap::{Parser, Subcommand};
 use colored::*;
+use std::path::PathBuf;
 
 use crate::model::{DiffResult, PortBinding};
 
@@ -68,7 +68,10 @@ pub fn print_bindings_table(bindings: &[PortBinding]) {
             "LAN / Custom".yellow().to_string()
         };
 
-        let pid_str = b.pid.map(|p| p.to_string()).unwrap_or_else(|| "-".to_string());
+        let pid_str = b
+            .pid
+            .map(|p| p.to_string())
+            .unwrap_or_else(|| "-".to_string());
         let proc_str = b.process_name.as_deref().unwrap_or("-");
         let user_str = b.username.as_deref().unwrap_or("-");
 
@@ -84,12 +87,20 @@ pub fn print_diff_report(diff: &DiffResult, fail_on_new: bool) {
     println!("\n=== Port Exposure Snapshot Diff ===\n");
 
     if !diff.has_differences() {
-        println!("{}", "✔ No changes detected. All listening sockets match baseline exactly.\n".green());
+        println!(
+            "{}",
+            "✔ No changes detected. All listening sockets match baseline exactly.\n".green()
+        );
         return;
     }
 
     if !diff.added.is_empty() {
-        println!("{}", format!("[+] Newly Opened Ports ({}) :", diff.added.len()).green().bold());
+        println!(
+            "{}",
+            format!("[+] Newly Opened Ports ({}) :", diff.added.len())
+                .green()
+                .bold()
+        );
         for b in &diff.added {
             let exposure = if b.is_all_interfaces {
                 "PUBLIC EXPOSURE (0.0.0.0 / ::)".red().bold().to_string()
@@ -110,7 +121,12 @@ pub fn print_diff_report(diff: &DiffResult, fail_on_new: bool) {
     }
 
     if !diff.removed.is_empty() {
-        println!("{}", format!("[-] Closed / Terminated Ports ({}) :", diff.removed.len()).red().bold());
+        println!(
+            "{}",
+            format!("[-] Closed / Terminated Ports ({}) :", diff.removed.len())
+                .red()
+                .bold()
+        );
         for b in &diff.removed {
             println!(
                 "  - Port {}/{} (was: {}, Proc: {:?})",
@@ -124,7 +140,12 @@ pub fn print_diff_report(diff: &DiffResult, fail_on_new: bool) {
     }
 
     if !diff.changed.is_empty() {
-        println!("{}", format!("[~] Changed Port Bindings ({}) :", diff.changed.len()).yellow().bold());
+        println!(
+            "{}",
+            format!("[~] Changed Port Bindings ({}) :", diff.changed.len())
+                .yellow()
+                .bold()
+        );
         for c in &diff.changed {
             println!(
                 "  ~ Port {}/{}: PID {:?} -> {:?}, Proc {:?} -> {:?}",
@@ -140,6 +161,11 @@ pub fn print_diff_report(diff: &DiffResult, fail_on_new: bool) {
     }
 
     if fail_on_new && diff.has_new_exposures() {
-        eprintln!("{}", "[!] CI FAILURE: Newly exposed public interfaces detected!\n".red().bold());
+        eprintln!(
+            "{}",
+            "[!] CI FAILURE: Newly exposed public interfaces detected!\n"
+                .red()
+                .bold()
+        );
     }
 }

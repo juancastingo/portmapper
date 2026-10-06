@@ -1,6 +1,6 @@
+use clap::Parser;
 use std::fs;
 use std::process;
-use clap::Parser;
 
 use portmapper::cli::{print_bindings_table, print_diff_report, Cli, Commands};
 use portmapper::scanner::scan_listening_ports;
@@ -57,7 +57,10 @@ fn main() {
                     let latest = match find_latest_snapshot(&dir) {
                         Some(p) => p,
                         None => {
-                            eprintln!("No baseline specified and no previous snapshots found in {}", dir.display());
+                            eprintln!(
+                                "No baseline specified and no previous snapshots found in {}",
+                                dir.display()
+                            );
                             eprintln!("Run `portmapper save` first to create a baseline snapshot.");
                             process::exit(1);
                         }
@@ -117,7 +120,10 @@ fn main() {
                     println!("  (No snapshots saved yet. Run `portmapper save` to create one)");
                 } else {
                     for f in files {
-                        println!("  • {}", f.file_name().unwrap_or_default().to_string_lossy());
+                        println!(
+                            "  • {}",
+                            f.file_name().unwrap_or_default().to_string_lossy()
+                        );
                     }
                 }
             } else {

@@ -25,16 +25,25 @@ pub fn create_snapshot(bindings: Vec<PortBinding>, custom_id: Option<String>) ->
 
 pub fn default_snapshot_dir() -> PathBuf {
     let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
-    PathBuf::from(home).join(".config").join("portmapper").join("snapshots")
+    PathBuf::from(home)
+        .join(".config")
+        .join("portmapper")
+        .join("snapshots")
 }
 
-pub fn save_snapshot_file(snapshot: &Snapshot, target_path: Option<&Path>) -> Result<PathBuf, String> {
+pub fn save_snapshot_file(
+    snapshot: &Snapshot,
+    target_path: Option<&Path>,
+) -> Result<PathBuf, String> {
     let file_path = match target_path {
         Some(p) => p.to_path_buf(),
         None => {
             let dir = default_snapshot_dir();
             if let Err(e) = fs::create_dir_all(&dir) {
-                return Err(format!("Failed to create snapshot directory {:?}: {}", dir, e));
+                return Err(format!(
+                    "Failed to create snapshot directory {:?}: {}",
+                    dir, e
+                ));
             }
             dir.join(format!("{}.json", snapshot.id))
         }
@@ -53,15 +62,14 @@ pub fn save_snapshot_file(snapshot: &Snapshot, target_path: Option<&Path>) -> Re
 }
 
 pub fn load_snapshot_file(path: &Path) -> Result<Snapshot, String> {
-    let mut file = File::open(path)
-        .map_err(|e| format!("Failed to open snapshot {:?}: {}", path, e))?;
+    let mut file =
+        File::open(path).map_err(|e| format!("Failed to open snapshot {:?}: {}", path, e))?;
 
     let mut content = String::new();
     file.read_to_string(&mut content)
         .map_err(|e| format!("Failed to read snapshot file: {}", e))?;
 
-    serde_json::from_str(&content)
-        .map_err(|e| format!("Failed to parse snapshot JSON: {}", e))
+    serde_json::from_str(&content).map_err(|e| format!("Failed to parse snapshot JSON: {}", e))
 }
 
 pub fn diff_snapshots(baseline: &Snapshot, current: &Snapshot) -> DiffResult {
